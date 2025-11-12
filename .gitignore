@@ -12,6 +12,7 @@ cassandra/**/data/
 *.log
 *.tmp
 nohup.out
+.venv/
 
 # System files
 .DS_Store
