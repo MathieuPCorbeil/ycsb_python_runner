@@ -96,7 +96,7 @@ def drop_mongodb_database():
 
 def generate_mongodb_docker_compose(node_count, config):
     db_name = "mongodb"
-    docker_compose_path = f"{db_name}/docker-compose.yml"
+    docker_compose_path = f"{db_name}/docker-compose-run.yml"
 
     with open(f"{db_name}/{config['DOCKER_COMPOSE_BASE_FILENAME']}", "r") as f:
         mongodb_yml = f.read()
@@ -144,10 +144,10 @@ def handle_mongodb_workload(
     results["phases"].append(load_data)
     print("\n\n✓ Load phase complete!\n")
 
-    print(f"Starting {config['ITERATION_COUNT']} run iterations...")
-    for i in range(config["ITERATION_COUNT"]):
+    print(f"Starting {params['iteration_count']} run iterations...")
+    for i in range(params["iteration_count"]):
         print(
-            f"  Running iteration {i+1}/{config['ITERATION_COUNT']}...",
+            f"\n Running iteration {i+1}/{params['iteration_count']}...",
             end="",
             flush=True,
         )

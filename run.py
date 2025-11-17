@@ -25,7 +25,6 @@ from redis.redis_operations import (
 # Configuration constants
 CONFIG = {
     "YCSB_BIN_PATH": "/home/ubuntu/ycsb-0.17.0/bin/ycsb.sh",
-    "ITERATION_COUNT": 1,
     "WORKLOADS_PATH": "./workloads",
     "RESULTS_PATH": "results",
     "DOCKER_COMPOSE_BASE_FILENAME": "docker-compose-base.yml",
@@ -39,19 +38,31 @@ params = {
     "db": None,
     "node_count": None,
     "workload_path": None,
+    "iteration_count": 1,
 }
 
 
 def parse_arguments():
     """Parse command-line arguments and validate them."""
-    if len(sys.argv) < 4:
+    args = sys.argv[1:]
+
+    cleanup = False
+    if "-c" in args:
+        cleanup = True
+        args.remove("-c")
+
+    if len(args) < 3:
         print_usage()
         return False
 
     try:
-        params["db"] = validate_db(sys.argv[1])
-        params["node_count"] = validate_node_count(int(sys.argv[2]))
-        params["workload_path"] = validate_workload_path(sys.argv[3])
+        params["db"] = validate_db(args[0])
+        params["node_count"] = validate_node_count(int(args[1]))
+        params["workload_path"] = validate_workload_path(args[2])
+        if len(args) > 3:
+            params["iteration_count"] = validate_iteration_count(int(args[3]))
+        if cleanup:
+            cleanup_orphan_containers()
         return True
     except ValueError as e:
         print(f"Error: {e}")
@@ -60,10 +71,12 @@ def parse_arguments():
 
 def print_usage():
     """Print usage information."""
-    print("Usage: python script.py <db> <node_count> <workload_file>")
+    print("Usage: python script.py <db> <node_count> <workload_file> [iterations] [-c]")
     print(f"  db: {' or '.join(CONFIG['SUPPORTED_DBS'])}")
     print("  node_count: positive integer")
     print("  workload_file: path to workload file in ./workloads/")
+    print("  iterations: number of run iterations (optional, default: 1)")
+    print("  -c: cleanup orphan containers (optional)")
     print("\nNote: Read/write ratios are defined in the workload file itself")
 
 
@@ -81,6 +94,36 @@ def validate_node_count(count):
     if count <= 0:
         raise ValueError("Invalid node count. Please use a positive integer")
     return count
+
+
+def validate_iteration_count(count):
+    """Validate and return iteration count."""
+    if count <= 0:
+        raise ValueError("Invalid iteration count. Please use a positive integer")
+    return count
+
+
+def cleanup_orphan_containers():
+    """Clean up orphan Docker containers."""
+    print("Cleaning up orphan containers...")
+    try:
+        subprocess.run(
+            [
+                "sudo",
+                "docker",
+                "compose",
+                "-f",
+                f"{params['db']}/docker-compose-run.yml",
+                "down",
+                "--remove-orphans",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=30,
+        )
+        print("✓ Orphan containers cleaned up")
+    except Exception as e:
+        print(f"Warning: Could not clean up orphan containers: {e}")
 
 
 def validate_workload_path(workload_file):
@@ -148,7 +191,15 @@ def generate_docker_compose():
 def run_docker_compose():
     db_name = params["db"]
     subprocess.run(
-        ["sudo", "docker", "compose", "-f", f"{db_name}/docker-compose.yml", "up", "-d"]
+        [
+            "sudo",
+            "docker",
+            "compose",
+            "-f",
+            f"{db_name}/docker-compose-run.yml",
+            "up",
+            "-d",
+        ]
     )
 
     if db_name == "mongodb":
@@ -193,7 +244,7 @@ def ycsb_wrapper(command_type: str, iteration: int, workload_path: str) -> str:
                 workload_path,
             ],
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
             text=True,
         )
 
@@ -208,9 +259,10 @@ def ycsb_wrapper(command_type: str, iteration: int, workload_path: str) -> str:
             if line:
                 output_lines.append(line)
                 if (
-                    "Throughput" in line
-                    or "AverageLatency" in line
-                    or "Operations" in line
+                    "[READ]" in line
+                    or "[UPDATE]" in line
+                    or "[OVERALL]" in line
+                    or "[INSERT]" in line
                 ):
                     print(f"\n    {line.strip()}", end="")
 
@@ -296,6 +348,13 @@ def parse_ycsb_output(output: str, phase: str, iteration: int) -> dict:
             if op_type not in phase_data["operations"]:
                 phase_data["operations"][op_type] = {}
             phase_data["operations"][op_type]["p99_latency_us"] = latency
+
+        elif re.match(r"\[(READ|INSERT|UPDATE|DELETE)\], Return=OK,", line):
+            op_type = re.match(r"\[(\w+)\]", line).group(1)
+            count = int(line.split(",")[2])
+            if op_type not in phase_data["operations"]:
+                phase_data["operations"][op_type] = {}
+            phase_data["operations"][op_type]["return_ok"] = count
 
     return phase_data
 
