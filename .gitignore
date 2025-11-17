@@ -13,6 +13,7 @@ cassandra/**/data/
 *.tmp
 nohup.out
 .venv/
+**/docker-compose-run.yml
 
 # System files
 .DS_Store
