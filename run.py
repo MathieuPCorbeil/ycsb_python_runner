@@ -21,6 +21,11 @@ from redis.redis_operations import (
     generate_redis_docker_compose,
     handle_redis_workload as handle_redis_workload_impl,
 )
+from cassandra.cassandra_operations import (
+    initialize_cassandra_cluster,
+    generate_cassandra_docker_compose,
+    handle_cassandra_workload as handle_cassandra_workload_impl,
+)
 
 # Configuration constants
 CONFIG = {
@@ -30,7 +35,7 @@ CONFIG = {
     "DOCKER_COMPOSE_BASE_FILENAME": "docker-compose-base.yml",
     "YCSB_RUN_COMMAND": "run",
     "YCSB_LOAD_COMMAND": "load",
-    "SUPPORTED_DBS": ["redis", "mongodb"],
+    "SUPPORTED_DBS": ["redis", "mongodb", "cassandra"],
 }
 
 # Runtime parameters (set during main())
@@ -172,6 +177,12 @@ redis.port=6379
 # MongoDB connection settings (auto-added)
 mongodb.url=mongodb://localhost:27017
 """
+    elif params["db"] == "cassandra":
+        workload_data += f"""
+# Cassandra connection settings (auto-added)
+hosts=localhost
+port=9042
+"""
 
     # Write to a temporary workload file with configuration
     output_path = f"{CONFIG['WORKLOADS_PATH']}/{params['db']}_workload_temp.txt"
@@ -186,6 +197,8 @@ def generate_docker_compose():
         generate_redis_docker_compose(params["node_count"], CONFIG)
     elif params["db"] == "mongodb":
         generate_mongodb_docker_compose(params["node_count"], CONFIG)
+    elif params["db"] == "cassandra":
+        generate_cassandra_docker_compose(params["node_count"], CONFIG)
 
 
 def run_docker_compose():
@@ -204,6 +217,8 @@ def run_docker_compose():
 
     if db_name == "mongodb":
         initialize_mongodb_replica_set(params["node_count"])
+    elif db_name == "cassandra":
+        initialize_cassandra_cluster(params["node_count"])
 
 
 def handle_workload(workload_path: str):
@@ -222,6 +237,15 @@ def handle_workload(workload_path: str):
             parse_ycsb_output,
             save_results_json,
         )
+    elif params["db"] == "cassandra":
+        results = handle_cassandra_workload_impl(
+            workload_path,
+            params,
+            CONFIG,
+            ycsb_wrapper,
+            parse_ycsb_output,
+            save_results_json,
+        )
 
     if results is not None:
         print("\n✓ Done running all iterations!")
@@ -231,6 +255,7 @@ def handle_workload(workload_path: str):
 
 def ycsb_wrapper(command_type: str, iteration: int, workload_path: str) -> str:
     db = params["db"]
+    db_binding = "cassandra-cql" if db == "cassandra" else db
     output_lines = []
 
     try:
@@ -238,7 +263,7 @@ def ycsb_wrapper(command_type: str, iteration: int, workload_path: str) -> str:
             [
                 CONFIG["YCSB_BIN_PATH"],
                 command_type,
-                db,
+                db_binding,
                 "-s",
                 "-P",
                 workload_path,
@@ -247,6 +272,16 @@ def ycsb_wrapper(command_type: str, iteration: int, workload_path: str) -> str:
             stderr=subprocess.DEVNULL,
             text=True,
         )
+
+        cmd = [
+            CONFIG["YCSB_BIN_PATH"],
+            command_type,
+            db_binding,
+            "-s",
+            "-P",
+            workload_path,
+        ]
+        print(f" command: {' '.join(cmd)}")
 
         try:
             stdout_data, stderr_data = process.communicate(timeout=600)

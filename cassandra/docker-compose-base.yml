@@ -1,0 +1,19 @@
+services:
+  cassandra-1:
+    image: cassandra:latest
+    container_name: cassandra-1
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_SEEDS: cassandra-1
+      CASSANDRA_CLUSTER_NAME: ycsb-cluster
+      CASSANDRA_DC: dc1
+      CASSANDRA_RACK: rack1
+      CASSANDRA_LISTEN_ADDRESS: cassandra-1
+    healthcheck:
+      test: ["CMD", "nodetool", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cassandra-net
