@@ -281,7 +281,7 @@ def ycsb_wrapper(command_type: str, iteration: int, workload_path: str) -> str:
             "-P",
             workload_path,
         ]
-        print(f" command: {' '.join(cmd)}")
+        print(f" Running: {' '.join(cmd)}")
 
         try:
             stdout_data, stderr_data = process.communicate(timeout=600)

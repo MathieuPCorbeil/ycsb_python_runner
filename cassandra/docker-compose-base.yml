@@ -5,15 +5,17 @@ services:
     ports:
       - "9042:9042"
     environment:
-      CASSANDRA_SEEDS: cassandra-1
+      CASSANDRA_SEEDS: cassandra-1,cassandra-2,cassandra-3
       CASSANDRA_CLUSTER_NAME: ycsb-cluster
       CASSANDRA_DC: dc1
       CASSANDRA_RACK: rack1
       CASSANDRA_LISTEN_ADDRESS: cassandra-1
+      MAX_HEAP_SIZE: 256M
+      HEAP_NEWSIZE: 50M
     healthcheck:
-      test: ["CMD", "nodetool", "status"]
+      test: ["CMD-SHELL", "[ $$(nodetool statusgossip) = running ]"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
     networks:
       - cassandra-net

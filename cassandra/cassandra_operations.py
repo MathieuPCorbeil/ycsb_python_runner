@@ -57,6 +57,7 @@ def generate_cassandra_docker_compose(node_count, config):
     with open(f"{db_name}/{config['DOCKER_COMPOSE_BASE_FILENAME']}", "r") as f:
         cassandra_yml = f.read()
 
+    seeds = ",".join([f"cassandra-{j}" for j in range(1, node_count + 1)])
     for i in range(2, node_count + 1):
         port = 9042 + i - 1
         cassandra_yml += f"""
@@ -66,16 +67,18 @@ def generate_cassandra_docker_compose(node_count, config):
     ports:
       - "{port}:9042"
     environment:
-      CASSANDRA_SEEDS: cassandra-1
+      CASSANDRA_SEEDS: {seeds}
       CASSANDRA_CLUSTER_NAME: ycsb-cluster
       CASSANDRA_DC: dc1
       CASSANDRA_RACK: rack1
       CASSANDRA_LISTEN_ADDRESS: cassandra-{i}
+      MAX_HEAP_SIZE: 256M
+      HEAP_NEWSIZE: 50M
     healthcheck:
-      test: ["CMD", "nodetool", "status"]
+      test: ["CMD-SHELL", "[ $$(nodetool statusgossip) = running ]"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
     networks:
       - cassandra-net
     depends_on:
