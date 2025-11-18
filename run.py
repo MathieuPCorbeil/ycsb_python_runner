@@ -29,7 +29,7 @@ from cassandra.cassandra_operations import (
 
 # Configuration constants
 CONFIG = {
-    "YCSB_BIN_PATH": "/home/ubuntu/ycsb-0.17.0/bin/ycsb.sh",
+    "YCSB_BIN_PATH": os.path.expanduser("~/ycsb-0.17.0/bin/ycsb.sh"),
     "WORKLOADS_PATH": "./workloads",
     "RESULTS_PATH": "results",
     "DOCKER_COMPOSE_BASE_FILENAME": "docker-compose-base.yml",

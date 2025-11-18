@@ -11,7 +11,10 @@ def initialize_cassandra_cluster(node_count):
         start_time = time.time()
         ready = False
 
-        spinner = Halo(text="Waiting for Cassandra cluster to be ready", spinner="dots")
+        spinner = Halo(
+            text="Waiting for Cassandra cluster to be ready (This can be multiple minutes)",
+            spinner="dots",
+        )
         spinner.start()
 
         while time.time() - start_time < max_wait:
@@ -45,7 +48,9 @@ def initialize_cassandra_cluster(node_count):
         if ready:
             spinner.succeed(" Cassandra cluster ready")
         else:
-            spinner.warn("Cassandra cluster did not fully stabilize within timeout")
+            spinner.warn(
+                "Cassandra cluster did not fully stabilize within timeout, try running: `sudo docker exec cassandra-1 nodetool status`, if no errors, the cluster is ready, so add more time in this function"
+            )
     except Exception as e:
         print(f"Warning: Could not initialize Cassandra cluster: {e}")
 
