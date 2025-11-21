@@ -6,25 +6,31 @@ Example:
 > python3 run.py redis 12 update_heavy
 """
 
-import os
-import sys
-import subprocess
 import json
+import os
 import re
-from halo import Halo
+import subprocess
+import sys
+
+from cassandra.cassandra_operations import (
+    generate_cassandra_docker_compose,
+    initialize_cassandra_cluster,
+)
+from cassandra.cassandra_operations import (
+    handle_cassandra_workload as handle_cassandra_workload_impl,
+)
 from mongodb.mongodb_operations import (
-    initialize_mongodb_replica_set,
     generate_mongodb_docker_compose,
+    initialize_mongodb_replica_set,
+)
+from mongodb.mongodb_operations import (
     handle_mongodb_workload as handle_mongodb_workload_impl,
 )
 from redis.redis_operations import (
     generate_redis_docker_compose,
-    handle_redis_workload as handle_redis_workload_impl,
 )
-from cassandra.cassandra_operations import (
-    initialize_cassandra_cluster,
-    generate_cassandra_docker_compose,
-    handle_cassandra_workload as handle_cassandra_workload_impl,
+from redis.redis_operations import (
+    handle_redis_workload as handle_redis_workload_impl,
 )
 
 # Configuration constants
@@ -167,18 +173,18 @@ def prepare_workload(workload_path: str) -> str:
 
     # Add database-specific configuration
     if params["db"] == "redis":
-        workload_data += f"""
+        workload_data += """
 # Redis connection settings (auto-added)
 redis.host=localhost
 redis.port=6379
 """
     elif params["db"] == "mongodb":
-        workload_data += f"""
+        workload_data += """
 # MongoDB connection settings (auto-added)
 mongodb.url=mongodb://localhost:27017
 """
     elif params["db"] == "cassandra":
-        workload_data += f"""
+        workload_data += """
 # Cassandra connection settings (auto-added)
 hosts=localhost
 port=9042
@@ -288,7 +294,7 @@ def ycsb_wrapper(command_type: str, iteration: int, workload_path: str) -> str:
         except subprocess.TimeoutExpired:
             process.kill()
             stdout_data, stderr_data = process.communicate()
-            print(f"\n    ERROR: YCSB command timed out after 10 minutes")
+            print("\n    ERROR: YCSB command timed out after 10 minutes")
 
         for line in stdout_data.split("\n"):
             if line:

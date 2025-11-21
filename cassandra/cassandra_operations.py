@@ -1,6 +1,7 @@
+import os
 import subprocess
 import time
-import os
+
 from halo import Halo
 
 
@@ -91,7 +92,7 @@ def generate_cassandra_docker_compose(node_count, config):
         condition: service_healthy
 """
 
-    cassandra_yml += f"""
+    cassandra_yml += """
 networks:
   cassandra-net:
     driver: bridge
@@ -150,7 +151,7 @@ def handle_cassandra_workload(
     print(f"Starting {params['iteration_count']} run iterations...")
     for i in range(params["iteration_count"]):
         print(
-            f"\n Running iteration {i+1}/{params['iteration_count']}...",
+            f"\n Running iteration {i + 1}/{params['iteration_count']}...",
             end="",
             flush=True,
         )

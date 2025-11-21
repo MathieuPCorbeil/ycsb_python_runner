@@ -1,13 +1,12 @@
-import subprocess
-import time
 import json
 import os
+import subprocess
+import time
+
 from halo import Halo
 
 
 def initialize_mongodb_replica_set(node_count):
-    import time
-
     print("Initializing MongoDB replica set...")
     time.sleep(3)
 
@@ -16,7 +15,7 @@ def initialize_mongodb_replica_set(node_count):
         for i in range(node_count):
             priority = 10 if i == 0 else 1
             members_list.append(
-                {"_id": i, "host": f"mongo{i+1}:27017", "priority": priority}
+                {"_id": i, "host": f"mongo{i + 1}:27017", "priority": priority}
             )
 
         init_cmd = f'rs.initiate({{_id:"rs0",members:{json.dumps(members_list)}}}, {{force: true}})'
@@ -116,7 +115,7 @@ def generate_mongodb_docker_compose(node_count, config):
       - mongo-net
 """
 
-    mongodb_yml += f"""
+    mongodb_yml += """
 networks:
   mongo-net:
     driver: bridge
@@ -147,7 +146,7 @@ def handle_mongodb_workload(
     print(f"Starting {params['iteration_count']} run iterations...")
     for i in range(params["iteration_count"]):
         print(
-            f"\n Running iteration {i+1}/{params['iteration_count']}...",
+            f"\n Running iteration {i + 1}/{params['iteration_count']}...",
             end="",
             flush=True,
         )

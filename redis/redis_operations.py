@@ -17,7 +17,7 @@ def generate_redis_docker_compose(node_count, config):
     command: redis-server --appendonly yes --slaveof redis-master 6379
 """
 
-    redis_yml += f"""
+    redis_yml += """
 networks:
   redis-net:
     driver: bridge
@@ -45,7 +45,7 @@ def handle_redis_workload(
     print(f"Starting {params['iteration_count']} run iterations...")
     for i in range(params["iteration_count"]):
         print(
-            f"\n Running iteration {i+1}/{params['iteration_count']}...",
+            f"\n Running iteration {i + 1}/{params['iteration_count']}...",
             end="",
             flush=True,
         )
