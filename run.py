@@ -50,6 +50,7 @@ params = {
     "node_count": None,
     "workload_path": None,
     "iteration_count": 1,
+    "keep_alive": False,
 }
 
 
@@ -57,10 +58,9 @@ def parse_arguments():
     """Parse command-line arguments and validate them."""
     args = sys.argv[1:]
 
-    cleanup = False
-    if "-c" in args:
-        cleanup = True
-        args.remove("-c")
+    if "--keep-alive" in args:
+        params["keep_alive"] = True
+        args.remove("--keep-alive")
 
     if len(args) < 3:
         print_usage()
@@ -72,8 +72,6 @@ def parse_arguments():
         params["workload_path"] = validate_workload_path(args[2])
         if len(args) > 3:
             params["iteration_count"] = validate_iteration_count(int(args[3]))
-        if cleanup:
-            cleanup_orphan_containers()
         return True
     except ValueError as e:
         print(f"Error: {e}")
@@ -82,12 +80,14 @@ def parse_arguments():
 
 def print_usage():
     """Print usage information."""
-    print("Usage: python script.py <db> <node_count> <workload_file> [iterations] [-c]")
+    print(
+        "Usage: python script.py <db> <node_count> <workload_file> [iterations] [--keep-alive]"
+    )
     print(f"  db: {' or '.join(CONFIG['SUPPORTED_DBS'])}")
     print("  node_count: positive integer")
     print("  workload_file: path to workload file in ./workloads/")
     print("  iterations: number of run iterations (optional, default: 1)")
-    print("  -c: cleanup orphan containers (optional)")
+    print("  --keep-alive: keep containers running after exit")
     print("\nNote: Read/write ratios are defined in the workload file itself")
 
 
@@ -114,9 +114,9 @@ def validate_iteration_count(count):
     return count
 
 
-def cleanup_orphan_containers():
-    """Clean up orphan Docker containers."""
-    print("Cleaning up orphan containers...")
+def cleanup_containers():
+    """Clean up Docker containers."""
+    print("Cleaning up containers...")
     try:
         subprocess.run(
             [
@@ -131,10 +131,11 @@ def cleanup_orphan_containers():
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             timeout=30,
+            check=True,  # Raise exception if non-zero exit
         )
-        print("✓ Orphan containers cleaned up")
+        print("✓ Containers cleaned up")
     except Exception as e:
-        print(f"Warning: Could not clean up orphan containers: {e}")
+        print(f"Warning: Could not clean up all containers: {e}")
 
 
 def validate_workload_path(workload_file):
@@ -431,4 +432,8 @@ if __name__ == "__main__":
         exit_code = main()
     finally:
         cleanup_temp_workload()
+        if params["keep_alive"]:
+            print("Containers will remain running (--keep-alive).")
+        else:
+            cleanup_containers()
     sys.exit(exit_code)
