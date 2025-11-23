@@ -1,6 +1,30 @@
-I'm using an ARM's based machine on Ubuntu 20 LTS.
+# Comparison of NoSQL Databases (Redis, MongoDB and Apache Cassandra)
+
+## Table of Contents
+
+- [Comparison of NoSQL Databases (Redis, MongoDB and Apache Cassandra)](#comparison-of-nosql-databases-redis-mongodb-and-apache-cassandra)
+  - [Table of Contents](#table-of-contents)
+  - [Installing](#installing)
+    - [Prerequisites](#prerequisites)
+    - [Step 0: Install Docker](#step-0-install-docker)
+    - [Step 1: Install YCSB](#step-1-install-ycsb)
+    - [Step 2: Add YCSB to PATH](#step-2-add-ycsb-to-path)
+    - [Step 3: Set up Python virtual environment](#step-3-set-up-python-virtual-environment)
+    - [Step 4: Update run.py configuration](#step-4-update-runpy-configuration)
+  - [Using](#using)
+    - [Basic Usage](#basic-usage)
+    - [Arguments](#arguments)
+    - [Examples](#examples)
+    - [Output](#output)
+    - [Workload Files](#workload-files)
+
 
 ## Installing
+
+I'm using an ARM's based machine on Ubuntu 20 LTS. - Mathieu
+
+Works pretty well with [WSL](https://learn.microsoft.com/en-us/windows/wsl/install). - Steven
+
 
 ### Prerequisites
 
