@@ -14,7 +14,7 @@ for DB in "${DATABASES[@]}"; do
     for NODES in "${NODE_COUNTS[@]}"; do
         for WORKLOAD in "${WORKLOADS[@]}"; do
             echo "⚙️  Running $DB with $NODES nodes, workload $WORKLOAD, $ITERATIONS iterations..."
-            python3 run.py "$DB" "$NODES" "$WORKLOAD" "$ITERATIONS"
+            python3 main.py "$DB" "$NODES" "$WORKLOAD" "$ITERATIONS"
             echo "Finished $DB with $NODES nodes, workload $WORKLOAD"
             echo "---------------------------------------------"
         done

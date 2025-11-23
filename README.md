@@ -10,7 +10,7 @@
         -   [Step 1: Install YCSB](#step-1-install-ycsb)
         -   [Step 2: Add YCSB to PATH](#step-2-add-ycsb-to-path)
         -   [Step 3: Set up Python virtual environment](#step-3-set-up-python-virtual-environment)
-        -   [Step 4: Update run.py configuration](#step-4-update-runpy-configuration)
+        -   [Step 4: Update configuration](#step-4-update-configuration)
     -   [Using](#using)
         -   [Basic Usage](#basic-usage)
         -   [Arguments](#arguments)
@@ -89,9 +89,9 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Step 4: Update run.py configuration
+### Step 4: Update configuration
 
-If necessary, edit `run.py` and update the `YCSB_BIN_PATH` to use the PATH version:
+If necessary, edit `config.py` and update the `YCSB_BIN_PATH` to use the PATH version:
 
 ```python
 CONFIG = {
@@ -105,7 +105,7 @@ CONFIG = {
 ### Basic Usage
 
 ```bash
-python3 run.py <database> <node_count> <workload> [iterations] [--keep-alive]
+python3 main.py <database> <node_count> <workload> [iterations] [--keep-alive]
 ```
 
 ### Arguments
@@ -121,19 +121,19 @@ python3 run.py <database> <node_count> <workload> [iterations] [--keep-alive]
 Single Redis node with workload A:
 
 ```bash
-python3 run.py redis 1 workloada
+python3 main.py redis 1 workloada
 ```
 
 3-node MongoDB cluster, workload B, 5 iterations, keep containers running
 
 ```bash
-python3 run.py mongodb 3 workloadb 5 --keep-alive
+python3 main.py mongodb 3 workloadb 5 --keep-alive
 ```
 
 Cassandra with 2 nodes and a custom workload `im_a_custom_workload`:
 
 ```bash
-python3 run.py cassandra 2 im_a_custom_workload
+python3 main.py cassandra 2 im_a_custom_workload
 ```
 
 ### Output
