@@ -69,6 +69,7 @@ def parse_arguments():
         params["workload_path"] = validate_workload_path(args[2])
         if len(args) > 3:
             params["iteration_count"] = validate_iteration_count(int(args[3]))
+        cleanup_containers()
         return True
     except ValueError as e:
         print(f"Error: {e}")
