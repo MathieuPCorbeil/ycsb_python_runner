@@ -1,9 +1,6 @@
 """
-Run with:
-python run.py <db> <node_count> <workload_file>
-Example:
-> python3 run.py mongodb 3 update_heavy
-> python3 run.py redis 12 update_heavy
+HEY,
+CONSULT README.md FOR USAGE DETAILS!
 """
 
 import json

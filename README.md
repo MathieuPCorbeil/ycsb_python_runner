@@ -17,7 +17,8 @@
     - [Examples](#examples)
     - [Output](#output)
     - [Workload Files](#workload-files)
-
+      - [Built-in](#built-in)
+      - [Custom](#custom)
 
 ## Installing
 
@@ -25,12 +26,11 @@ I'm using an ARM's based machine on Ubuntu 20 LTS. - Mathieu
 
 Works pretty well with [WSL](https://learn.microsoft.com/en-us/windows/wsl/install). - Steven
 
-
 ### Prerequisites
 
-- Docker and Docker Compose
-- Python 3
-- Java 8+ (required by YCSB)
+-   Docker and Docker Compose
+-   Python 3
+-   Java 8+ (required by YCSB)
 
 ### Step 0: Install Docker
 
@@ -90,7 +90,7 @@ pip install -r requirements.txt
 
 ### Step 4: Update run.py configuration
 
-Edit `run.py` and update the `YCSB_BIN_PATH` to use the PATH version:
+If necessary, edit `run.py` and update the `YCSB_BIN_PATH` to use the PATH version:
 
 ```python
 CONFIG = {
@@ -109,30 +109,30 @@ python3 run.py <database> <node_count> <workload> [iterations] [--keep-alive]
 
 ### Arguments
 
-- `<database>`: redis, mongodb, or cassandra
-- `<node_count>`: Number of nodes (positive integer)
-- `<workload>`: Workload name from workloads/ directory (e.g., update_heavy, read_heavy)
-- `[iterations]`: Optional - Number of run iterations (default: 1)
-- `[--keep-alive]`: Optional - Keep containers running after exit (clean up by default)
+-   `<database>`: redis, mongodb, or cassandra
+-   `<node_count>`: Number of nodes (positive integer)
+-   `<workload>`: Workload name from workloads/ directory ([see below](#workload-files))
+-   `[iterations]`: Optional - Number of run iterations (default: 1)
+-   `[--keep-alive]`: Optional - Keep containers running after exit (clean up by default)
 
 ### Examples
 
-Single node Redis with update_heavy workload:
+Single Redis node with workload A:
 
 ```bash
-python3 run.py redis 1 update_heavy
+python3 run.py redis 1 workloada
 ```
 
-3-node MongoDB cluster, 5 iterations, keep containers running
+3-node MongoDB cluster, workload B, 5 iterations, keep containers running
 
 ```bash
-python3 run.py mongodb 3 update_heavy 5 --keep-alive
+python3 run.py mongodb 3 workloadb 5 --keep-alive
 ```
 
-Cassandra with 2 nodes:
+Cassandra with 2 nodes and a custom workload `im_a_custom_workload`:
 
 ```bash
-python3 run.py cassandra 2 read_heavy --keep-alive
+python3 run.py cassandra 2 im_a_custom_workload
 ```
 
 ### Output
@@ -141,7 +141,29 @@ Results are saved as JSON files in `results/<database>/<node_count>/<workload>.j
 
 ### Workload Files
 
-Place custom workload files in the `workloads/` directory. Example workload properties:
+#### Built-in
+
+YCSB includes a set of [built-in](https://github.com/brianfrankcooper/YCSB/wiki/Core-Workloads) workloads.
+
+They can be found using:
+
+```
+ls ~/ycsb-0.17.0/workloads (~ or depending on where you installed YCSB)
+```
+
+For simplicity, the relevant workloads for the assignment (A-E) have been copied to the `workloads/` directory.
+
+| Workload Label | YCSB File | Description                                   |
+| -------------- | --------- | --------------------------------------------- |
+| Workload A     | workloada | Update-heavy workload (Read: 50%, Write: 50%) |
+| Workload B     | workloadb | Read-heavy workload (Read: 95%, Write: 5%)    |
+| Workload C     | workloadc | Read-only workload (Read: 100%)               |
+| Workload D     | workloadd | Read latest data (Read: 95%, Insert: 5%)      |
+| Workload E     | workloade | Short ranges workload (Scan: 95%, Insert: 5%) |
+
+#### Custom
+
+Custom workloads can also be added to the `workloads/` directory. Example workload properties:
 
 ```
 recordcount=1000
