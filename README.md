@@ -80,7 +80,7 @@ CONFIG = {
 ### Basic Usage
 
 ```bash
-python3 run.py <database> <node_count> <workload> [iterations] [-c]
+python3 run.py <database> <node_count> <workload> [iterations] [--keep-alive]
 ```
 
 ### Arguments
@@ -89,7 +89,7 @@ python3 run.py <database> <node_count> <workload> [iterations] [-c]
 - `<node_count>`: Number of nodes (positive integer)
 - `<workload>`: Workload name from workloads/ directory (e.g., update_heavy, read_heavy)
 - `[iterations]`: Optional - Number of run iterations (default: 1)
-- `[-c]`: Optional - Clean up orphan containers before starting (use when changing `node_count`)
+- `[--keep-alive]`: Optional - Keep containers running after exit (clean up by default)
 
 ### Examples
 
@@ -99,16 +99,16 @@ Single node Redis with update_heavy workload:
 python3 run.py redis 1 update_heavy
 ```
 
-3-node MongoDB cluster, 5 iterations, cleanup orphans:
+3-node MongoDB cluster, 5 iterations, keep containers running
 
 ```bash
-python3 run.py mongodb 3 update_heavy 5 -c
+python3 run.py mongodb 3 update_heavy 5 --keep-alive
 ```
 
 Cassandra with 2 nodes:
 
 ```bash
-python3 run.py cassandra 2 read_heavy -c
+python3 run.py cassandra 2 read_heavy --keep-alive
 ```
 
 ### Output
