@@ -11,6 +11,7 @@ from mongodb.mongodb_operations import (
 from redis.redis_operations import (
     handle_redis_workload as handle_redis_workload_impl,
 )
+from utils import aggregate_metric
 from ycsb_handler import parse_ycsb_output, ycsb_wrapper
 
 
@@ -52,7 +53,6 @@ def handle_workload(workload_path: str):
         results = handle_redis_workload_impl(
             workload_path, params, CONFIG, ycsb_wrapper, parse_ycsb_output
         )
-        save_results_json(results)
     elif params["db"] == "mongodb":
         results = handle_mongodb_workload_impl(
             workload_path,
@@ -60,7 +60,6 @@ def handle_workload(workload_path: str):
             CONFIG,
             ycsb_wrapper,
             parse_ycsb_output,
-            save_results_json,
         )
     elif params["db"] == "cassandra":
         results = handle_cassandra_workload_impl(
@@ -69,11 +68,12 @@ def handle_workload(workload_path: str):
             CONFIG,
             ycsb_wrapper,
             parse_ycsb_output,
-            save_results_json,
         )
 
     if results is not None:
-        # TODO: "Calculate a confidence interval for the averages" (from assignment instructions)
+        aggregated_stats = aggregate_run_phase_metrics(results)
+        results["aggregated_stats"] = aggregated_stats
+        save_results_json(results)
 
         print("\n✓ Done running all iterations!")
     else:
@@ -104,3 +104,32 @@ def save_results_json(results: dict):
         json.dump(results, f, indent=2)
 
     print(f"\n\n✓ Results saved to {results_file}")
+
+
+def aggregate_run_phase_metrics(results):
+    """Aggregate throughput and operation latencies from all run-phase iterations."""
+    run_phases = [p for p in results["phases"] if p["phase"] == "run"]
+    if not run_phases:
+        return {}
+
+    aggregated = {}
+
+    # Overall throughput
+    throughput_values = [p["overall"]["throughput_ops_sec"] for p in run_phases]
+    aggregated["throughput_ops_sec"] = aggregate_metric(throughput_values)
+
+    # Find all operation types dynamically
+    op_types = set()
+    for p in run_phases:
+        op_types.update(p["operations"].keys())
+
+    # Aggregate latencies per operation
+    latency_stats = {}
+    for op in op_types:
+        # Average latency
+        values = [p["operations"][op]["avg_latency_us"] for p in run_phases]
+        if values:
+            latency_stats[op] = aggregate_metric(values)
+
+    aggregated["avg_latency_us"] = latency_stats
+    return aggregated

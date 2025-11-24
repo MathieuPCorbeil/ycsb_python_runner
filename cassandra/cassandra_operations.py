@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS usertable (y_id varchar PRIMARY KEY, field0 varchar, 
 
 
 def handle_cassandra_workload(
-    workload_path, params, config, ycsb_wrapper, parse_ycsb_output, save_results_json
+    workload_path, params, config, ycsb_wrapper, parse_ycsb_output
 ):
     results = {
         "workload": os.path.splitext(os.path.basename(params["workload_path"]))[0],
@@ -153,6 +153,5 @@ def handle_cassandra_workload(
         run_data = parse_ycsb_output(run_output, "run", i)
         results["phases"].append(run_data)
 
-    save_results_json(results)
     print("\n✓ Done running all iterations!")
     return results
