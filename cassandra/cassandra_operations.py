@@ -5,10 +5,9 @@ import time
 from halo import Halo
 
 
-def initialize_cassandra_cluster(node_count):
-    print("Initializing Cassandra cluster...")
+def wait_for_cassandra_cluster_init(node_count, max_wait=300):
+    print("Waiting for Cassandra cluster initialization...")
     try:
-        max_wait = 180
         start_time = time.time()
         ready = False
 
@@ -47,7 +46,7 @@ def initialize_cassandra_cluster(node_count):
             time.sleep(5)
 
         if ready:
-            spinner.succeed(" Cassandra cluster ready")
+            spinner.succeed("Cassandra cluster ready")
         else:
             spinner.warn(
                 "Cassandra cluster did not fully stabilize within timeout, try running: `sudo docker exec cassandra-1 nodetool status`, if no errors, the cluster is ready, so add more time in this function"
@@ -80,16 +79,11 @@ def generate_cassandra_docker_compose(node_count, config):
       CASSANDRA_LISTEN_ADDRESS: cassandra-{i}
       MAX_HEAP_SIZE: 256M
       HEAP_NEWSIZE: 50M
-    healthcheck:
-      test: ["CMD-SHELL", "[ $$(nodetool statusgossip) = running ]"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
     networks:
       - cassandra-net
     depends_on:
       cassandra-1:
-        condition: service_healthy
+        condition: service_started
 """
 
     cassandra_yml += """
@@ -102,11 +96,11 @@ networks:
         f.write(cassandra_yml)
 
 
-def create_cassandra_keyspace():
+def create_cassandra_keyspace(node_count):
     print("Creating Cassandra keyspace and table...")
     try:
-        cql_commands = """
-CREATE KEYSPACE IF NOT EXISTS ycsb WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1};
+        cql_commands = f"""
+CREATE KEYSPACE IF NOT EXISTS ycsb WITH REPLICATION = {{'class': 'SimpleStrategy', 'replication_factor': {node_count}}};
 USE ycsb;
 CREATE TABLE IF NOT EXISTS usertable (y_id varchar PRIMARY KEY, field0 varchar, field1 varchar, field2 varchar, field3 varchar, field4 varchar, field5 varchar, field6 varchar, field7 varchar, field8 varchar, field9 varchar);
 """
@@ -140,7 +134,7 @@ def handle_cassandra_workload(
     }
 
     time.sleep(5)
-    create_cassandra_keyspace()
+    create_cassandra_keyspace(params["node_count"])
 
     print("Starting YCSB load phase...")
     load_output = ycsb_wrapper(config["YCSB_LOAD_COMMAND"], 0, workload_path)

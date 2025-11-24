@@ -12,10 +12,5 @@ services:
       CASSANDRA_LISTEN_ADDRESS: cassandra-1
       MAX_HEAP_SIZE: 256M
       HEAP_NEWSIZE: 50M
-    healthcheck:
-      test: ["CMD-SHELL", "[ $$(nodetool statusgossip) = running ]"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
     networks:
       - cassandra-net

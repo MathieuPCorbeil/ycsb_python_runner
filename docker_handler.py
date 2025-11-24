@@ -2,7 +2,7 @@ import subprocess
 
 from cassandra.cassandra_operations import (
     generate_cassandra_docker_compose,
-    initialize_cassandra_cluster,
+    wait_for_cassandra_cluster_init,
 )
 from config import CONFIG, params
 from mongodb.mongodb_operations import (
@@ -40,7 +40,7 @@ def run_docker_compose():
     if db_name == "mongodb":
         initialize_mongodb_replica_set(params["node_count"])
     elif db_name == "cassandra":
-        initialize_cassandra_cluster(params["node_count"])
+        wait_for_cassandra_cluster_init(params["node_count"])
 
 
 def cleanup_containers():
