@@ -81,9 +81,6 @@ def generate_cassandra_docker_compose(node_count, config):
       HEAP_NEWSIZE: 50M
     networks:
       - cassandra-net
-    depends_on:
-      cassandra-1:
-        condition: service_started
 """
 
     cassandra_yml += """
